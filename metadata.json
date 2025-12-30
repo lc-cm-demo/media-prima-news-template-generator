@@ -1,0 +1,5 @@
+{
+  "name": "MediaAsset GenAI",
+  "description": "Automated social media asset generator using Gemini to caption and composite images onto news templates.",
+  "requestFramePermissions": []
+}

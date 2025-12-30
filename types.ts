@@ -3,7 +3,8 @@ export interface NewsTemplate {
   name: string;
   description: string;
   customImageBase64?: string;
-  layoutConfig: {
+  templateImageUrl?: string;
+  layoutConfig?: {
     primaryColor: string;
     secondaryColor: string;
     overlayStyle: 'bottom-banner' | 'modern-gradient' | 'pop-frame';

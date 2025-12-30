@@ -1,8 +1,26 @@
 import { NewsTemplate } from "../types";
 
+const fetchImageAsDataUrl = (imageUrl: string): Promise<string> =>
+  new Promise((resolve, reject) => {
+    fetch(imageUrl)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to load template image: ${response.status}`);
+        }
+        return response.blob();
+      })
+      .then((blob) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("Failed to read template image data"));
+        reader.readAsDataURL(blob);
+      })
+      .catch(reject);
+  });
+
 /**
- * Simulates fetching a template image file from storage (e.g., GCS).
- * Generates a visual representation of the template layout to guide Gemini.
+ * Fetches a template image and returns a data URL for Gemini.
+ * Falls back to a generated layout preview if no template image is provided.
  */
 export const getTemplateReferenceImage = (template: NewsTemplate): Promise<string> => {
   // If it's a custom uploaded template, return the image directly
@@ -11,6 +29,10 @@ export const getTemplateReferenceImage = (template: NewsTemplate): Promise<strin
         return Promise.resolve(`data:image/png;base64,${template.customImageBase64}`);
     }
     return Promise.resolve(template.customImageBase64);
+  }
+
+  if (template.templateImageUrl) {
+    return fetchImageAsDataUrl(template.templateImageUrl);
   }
 
   return new Promise((resolve) => {

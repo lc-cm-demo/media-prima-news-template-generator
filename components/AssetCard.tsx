@@ -53,7 +53,7 @@ export const AssetCard: React.FC<AssetCardProps> = ({ asset }) => {
                 <div className="absolute inset-0 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
              </div>
              <p className="text-sm font-medium text-slate-700">Compositing Image</p>
-             <p className="text-xs text-slate-500 mt-1">Applying {template?.layoutConfig.overlayStyle}...</p>
+             <p className="text-xs text-slate-500 mt-1">Applying {template?.name ?? 'template'}...</p>
           </div>
         ) : (
            <div className="p-4 text-center opacity-50">

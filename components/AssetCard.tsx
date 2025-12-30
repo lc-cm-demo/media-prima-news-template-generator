@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import { GeneratedAsset } from '../types';
 import { NEWS_TEMPLATES } from '../constants';
 import { getTemplateReferenceImage } from '../services/templateUtils';
 
 interface AssetCardProps {
   asset: GeneratedAsset;
+  onRetry?: (templateId: string) => void;
+  onView?: (imageUrl: string, templateName: string) => void;
 }
 
-export const AssetCard: React.FC<AssetCardProps> = ({ asset }) => {
+export const AssetCard: React.FC<AssetCardProps> = ({ asset, onRetry, onView }) => {
   const [templatePreview, setTemplatePreview] = useState<string>('');
   const template = NEWS_TEMPLATES.find(t => t.id === asset.templateId);
 
@@ -41,11 +45,22 @@ export const AssetCard: React.FC<AssetCardProps> = ({ asset }) => {
       
       <div className="flex-grow bg-slate-100 relative min-h-[250px] flex items-center justify-center overflow-hidden">
         {asset.status === 'completed' ? (
-          <img 
-            src={asset.imageUrl} 
-            alt={`Generated for ${asset.templateName}`} 
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-          />
+          <>
+            <img 
+              src={asset.imageUrl} 
+              alt={`Generated for ${asset.templateName}`} 
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+            {onView && (
+              <button
+                onClick={() => onView(asset.imageUrl, asset.templateName)}
+                className="absolute top-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white text-slate-900 p-2 rounded-full shadow"
+                title="View larger"
+              >
+                <ZoomInIcon fontSize="small" />
+              </button>
+            )}
+          </>
         ) : asset.status === 'generating' ? (
           <div className="flex flex-col items-center p-6 text-center w-full">
              <div className="relative w-16 h-16 mb-4">
@@ -63,6 +78,16 @@ export const AssetCard: React.FC<AssetCardProps> = ({ asset }) => {
              <p className="text-sm text-slate-400">Waiting to start</p>
            </div>
         )}
+
+        {onRetry && asset.status !== 'generating' && (
+          <button
+            onClick={() => onRetry(asset.templateId)}
+            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900/80 hover:bg-slate-900 text-white p-2 rounded-full"
+            title="Regenerate this asset"
+          >
+            <RefreshIcon fontSize="small" />
+          </button>
+        )}
       </div>
 
       {asset.status === 'completed' && (
@@ -75,6 +100,12 @@ export const AssetCard: React.FC<AssetCardProps> = ({ asset }) => {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
             Download
           </a>
+        </div>
+      )}
+
+      {asset.status === 'failed' && (
+        <div className="p-3 bg-white border-t border-slate-100 text-center text-xs font-medium text-red-600">
+          Generation failed. Hover the card to rerun.
         </div>
       )}
     </div>

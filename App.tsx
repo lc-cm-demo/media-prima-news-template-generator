@@ -17,6 +17,8 @@ const App: React.FC = () => {
   const [caption, setCaption] = useState<string>('');
   const [isCaptioning, setIsCaptioning] = useState<boolean>(false);
   const [generatedAssets, setGeneratedAssets] = useState<GeneratedAsset[]>([]);
+  const [viewerImageUrl, setViewerImageUrl] = useState<string | null>(null);
+  const [viewerTitle, setViewerTitle] = useState<string>('');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -86,12 +88,45 @@ const App: React.FC = () => {
     });
   };
 
+  const retryAsset = async (templateId: string) => {
+    if (!sourceImage) return;
+    const template = NEWS_TEMPLATES.find((t) => t.id === templateId);
+    if (!template) return;
+
+    setGeneratedAssets((prev) =>
+      prev.map((asset) =>
+        asset.templateId === templateId
+          ? { ...asset, status: 'generating', imageUrl: '' }
+          : asset
+      )
+    );
+
+    try {
+      const imageUrl = await generateAssetWithTemplate(sourceImage, caption, template);
+      setGeneratedAssets((prev) =>
+        prev.map((asset) =>
+          asset.templateId === templateId
+            ? { ...asset, imageUrl, status: 'completed' }
+            : asset
+        )
+      );
+    } catch (err) {
+      setGeneratedAssets((prev) =>
+        prev.map((asset) =>
+          asset.templateId === templateId ? { ...asset, status: 'failed' } : asset
+        )
+      );
+    }
+  };
+
   const resetApp = () => {
     setSourceImage(null);
     setCaption('');
     setUserContext('');
     setGeneratedAssets([]);
     setCurrentStep(AppStep.UPLOAD);
+    setViewerImageUrl(null);
+    setViewerTitle('');
   };
 
   // Render Helpers
@@ -128,6 +163,30 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800">
+      {viewerImageUrl && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setViewerImageUrl(null)}
+        >
+          <div className="bg-white rounded-2xl shadow-xl max-w-5xl w-full overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+              <h3 className="text-sm font-semibold text-slate-700">{viewerTitle}</h3>
+              <button
+                className="text-sm font-medium text-slate-500 hover:text-slate-900"
+                onClick={() => setViewerImageUrl(null)}
+              >
+                Close
+              </button>
+            </div>
+            <div className="bg-slate-900">
+              <img src={viewerImageUrl} alt={viewerTitle} className="w-full h-auto max-h-[80vh] object-contain" />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -271,7 +330,15 @@ const App: React.FC = () => {
 
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                {generatedAssets.map((asset) => (
-                 <AssetCard key={asset.templateId} asset={asset} />
+                 <AssetCard
+                   key={asset.templateId}
+                   asset={asset}
+                   onRetry={retryAsset}
+                   onView={(imageUrl, templateName) => {
+                     setViewerImageUrl(imageUrl);
+                     setViewerTitle(templateName);
+                   }}
+                 />
                ))}
              </div>
 

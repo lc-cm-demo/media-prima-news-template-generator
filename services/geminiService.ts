@@ -2,7 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 import { NewsTemplate } from "../types";
 import { getTemplateReferenceImage } from "./templateUtils";
 
-const apiKey = process.env.API_KEY;
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 const ai = new GoogleGenAI({ apiKey: apiKey });
 
 /**
@@ -73,7 +73,7 @@ export const generateAssetWithTemplate = async (
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-image',
+      model: 'gemini-3-pro-image-preview',
       contents: {
         parts: [
           // Source Image (First)

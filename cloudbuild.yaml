@@ -1,0 +1,19 @@
+steps:
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --source=.
+      - --region=${_REGION}
+      - --project=${PROJECT_ID}
+      - --allow-unauthenticated
+      - --port=8080
+
+substitutions:
+  _SERVICE: mp-ads-template-gen
+  _REGION: us-central1
+
+options:
+  logging: CLOUD_LOGGING_ONLY

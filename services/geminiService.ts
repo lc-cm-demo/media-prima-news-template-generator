@@ -45,12 +45,18 @@ export const generateCaption = async (base64Image: string, userContext: string):
 export const generateAssetWithTemplate = async (
   base64SourceImage: string,
   caption: string,
-  template: NewsTemplate
+  template: NewsTemplate,
+  editNote?: string,
+  aspectRatio: string = "1:1"
 ): Promise<string> => {
   try {
     // 1. Generate/Fetch the visual template "file"
     const templateDataUrl = await getTemplateReferenceImage(template);
     const base64Template = templateDataUrl.split(',')[1];
+
+    const editNoteText = editNote
+      ? `\nUSER EDIT NOTES:\n${editNote}\n\nApply the notes while keeping the template style and preserving the scene.`
+      : '';
 
     const prompt = `
       You are an expert graphic designer and image compositor.
@@ -67,9 +73,11 @@ export const generateAssetWithTemplate = async (
       2. APPLY TEMPLATE: Superimpose the graphical elements (banners, color bars, frames) exactly as they appear in [Image 2] onto [Image 1].
       3. TEXT PLACEMENT: Render the caption text: "${caption}" inside the designated text area defined by the template (usually the banner or bottom bar).
       4. STYLE MATCH: Ensure the fonts and colors match the [Image 2] style.
+      5. ASPECT RATIO: Maintain a ${aspectRatio} aspect ratio for the final image.
       
       OUTPUT:
       A single high-quality image that looks like [Image 1] wrapped in the design of [Image 2].
+      ${editNoteText}
     `;
 
     const response = await ai.models.generateContent({
@@ -97,9 +105,9 @@ export const generateAssetWithTemplate = async (
         ]
       },
       config: {
-        // Enforce 1:1 aspect ratio to match our generated templates and ensure consistent layout mapping
+        // Enforce the selected aspect ratio to match user intent and template mapping
         imageConfig: {
-            aspectRatio: "1:1"
+            aspectRatio
         }
       }
     });
